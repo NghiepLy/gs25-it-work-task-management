@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT Work Task Management Dashboard | Jira Tracking</title>
+  <meta name="description" content="Dashboard quản lý và theo dõi báo cáo task công việc cho 15 thành viên team IT từ Jira Excel Data cho BA Manager">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- External Libraries (Chart.js & SheetJS) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-logo">IT</div>
+        <div class="brand-info">
+          <h1>IT Work Task Management</h1>
+          <p>BA Manager Dashboard &bull; Jira Task Tracking (15 Members)</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <div class="last-updated" id="lastUpdatedTag">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="lastUpdatedText">Đã tải dữ liệu mới nhất</span>
+        </div>
+
+        <button class="btn btn-primary" id="btnRefresh">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Refresh Data (Jira Excel)
+        </button>
+
+        <label class="btn btn-secondary" for="fileUploadInput" title="Tải file Excel mới trực tiếp từ máy">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Chọn file Excel
+          <input type="file" id="fileUploadInput" accept=".xlsx, .xls" class="hidden">
+        </label>
+
+        <button class="btn btn-success" id="btnExportHR">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Xuất Báo Cáo HR
+        </button>
+      </div>
+    </header>
+
+    <!-- Member Selection Bar -->
+    <section class="members-section">
+      <div class="section-header">
+        <div class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          Chọn Member Team IT (15 Members)
+        </div>
+        <div class="member-filter-status" id="selectedMemberInfo">
+          <span style="font-size: 13px; color: var(--text-secondary);">Đang chọn: <strong style="color: var(--accent-indigo);" id="activeMemberName">Tất cả Members (All)</strong></span>
+        </div>
+      </div>
+
+      <div class="members-grid" id="membersGrid">
+        <!-- Dynamic Member Cards injected by app.js -->
+      </div>
+    </section>
+
+    <!-- Month Slicer Bar Section -->
+    <section class="month-slicer-section">
+      <div class="section-header">
+        <div class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Chọn Tháng Báo Cáo (Month Slicer)
+        </div>
+        <div class="member-filter-status" id="selectedMonthInfo">
+          <span style="font-size: 13px; color: var(--text-secondary);">Đang chọn: <strong style="color: var(--accent-indigo);" id="activeMonthName">Tất cả các Tháng (All)</strong></span>
+        </div>
+      </div>
+
+      <div class="month-slicers-grid" id="monthSlicerContainer">
+        <!-- Dynamic Month Slicer Pill Cards injected by app.js -->
+      </div>
+    </section>
+
+    <!-- KPI Metrics Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon total">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value" id="kpiTotalTasks">0</div>
+          <div class="kpi-label">Tổng số Tasks</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon complete">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value" id="kpiCompletedTasks">0</div>
+          <div class="kpi-label">Đã hoàn thành</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon progress">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value" id="kpiInProgressTasks">0</div>
+          <div class="kpi-label">Đang làm / Testing</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon overdue">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value" id="kpiOverdueTasks">0</div>
+          <div class="kpi-label">Quá hạn / Cần xử lý</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon rate">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value" id="kpiCompletionRate">0%</div>
+          <div class="kpi-label">Tỷ lệ hoàn thành</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Analytics Charts -->
+    <section class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Phân bổ Tasks theo Member & Trạng thái</div>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartMemberTasks"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Tỷ lệ Trạng thái Công việc</div>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartStatusPie"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Monthly & Member Analytics Section -->
+    <section class="monthly-analytics-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Xu hướng Task Phát sinh & Hoàn thành theo Tháng
+          </div>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartMonthlyTrend"></canvas>
+        </div>
+      </div>
+
+      <div class="table-card monthly-table-card">
+        <div class="table-card-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color);">
+          <div class="chart-title" style="font-size: 15px; font-weight: 600; color: var(--text-primary);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Thống kê Số lượng Tasks theo Member & theo Tháng
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="matrix-table">
+            <thead id="monthlyMemberTableHead">
+              <!-- Dynamic head injected by app.js -->
+            </thead>
+            <tbody id="monthlyMemberTableBody">
+              <!-- Dynamic rows injected by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar Filters & Search -->
+    <section class="toolbar">
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Tìm kiếm theo Key, Summary, Assignee, Project...">
+      </div>
+
+      <div class="filter-group">
+        <select class="filter-select" id="filterMonth">
+          <option value="">Tất cả các Tháng</option>
+        </select>
+
+        <select class="filter-select" id="filterStatus">
+          <option value="">Tất cả Trạng thái</option>
+          <option value="To Do">To Do</option>
+          <option value="In Progress">In Progress / RIF.TODO</option>
+          <option value="TESTING">TESTING / Review</option>
+          <option value="Complete">Complete / Done</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+
+        <select class="filter-select" id="filterProject">
+          <option value="">Tất cả Dự án</option>
+        </select>
+
+        <select class="filter-select" id="filterCategory">
+          <option value="">Tất cả Category</option>
+        </select>
+
+        <select class="filter-select" id="filterTaskCat">
+          <option value="">Tất cả Task Category</option>
+        </select>
+
+        <select class="filter-select" id="filterIssueType">
+          <option value="">Tất cả Loại Task</option>
+          <option value="Task">Task</option>
+          <option value="Sub-task">Sub-task</option>
+          <option value="Bug">Bug</option>
+          <option value="Story">Story</option>
+          <option value="Epic">Epic</option>
+        </select>
+
+        <button class="btn btn-secondary" id="btnClearFilters">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          Xóa bộ lọc
+        </button>
+      </div>
+    </section>
+
+    <!-- Task Data Table Card -->
+    <section class="table-card">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" data-sort="key">Key &#x21C5;</th>
+              <th class="sortable" data-sort="summary">Tên Task / Summary &#x21C5;</th>
+              <th class="sortable" data-sort="issueType">Loại Task &#x21C5;</th>
+              <th class="sortable" data-sort="assignee">Member / Assignee &#x21C5;</th>
+              <th class="sortable" data-sort="project">Project &#x21C5;</th>
+              <th class="sortable" data-sort="category">Category &#x21C5;</th>
+              <th class="sortable" data-sort="taskCat">Task Category &#x21C5;</th>
+              <th class="sortable" data-sort="status">Trạng thái &#x21C5;</th>
+              <th class="sortable" data-sort="startDate">Start Date &#x21C5;</th>
+              <th class="sortable" data-sort="dueDate">Due Date &#x21C5;</th>
+              <th class="sortable" data-sort="created">Ngày tạo &#x21C5;</th>
+              <th class="sortable" data-sort="updated">Cập nhật &#x21C5;</th>
+            </tr>
+          </thead>
+          <tbody id="taskTableBody">
+            <!-- Dynamic rows injected by app.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <div class="pagination-info" id="paginationInfo">Hiển thị 0 / 0 tasks</div>
+        <div class="pagination-controls">
+          <button class="page-btn" id="btnPrevPage" disabled>&laquo; Trái</button>
+          <span style="font-size: 13px; color: var(--text-secondary); align-self: center;" id="pageIndicator">Trang 1</span>
+          <button class="page-btn" id="btnNextPage" disabled>Phải &raquo;</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main JavaScript App -->
+  <script src="app.js"></script>
+</body>
+</html>
